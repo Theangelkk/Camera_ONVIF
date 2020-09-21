@@ -1,16 +1,28 @@
 from Camera_onvif import Camera
 from Streaming_Video import Streaming_Video
+import cv2
+import asyncio
+import time
 
-Camera.set_parameters('192.168.1.108', 80, 'project', 'ONVIFADMIN2020')
-cam = Camera.get_camera()
+async def main():
 
-cam.set_Contrast(cam,50.0)
+    Camera.set_parameters('192.168.1.108', 80, 'project', 'ONVIFADMIN2020')
+    cam = Camera.get_camera()
 
-cam.set_Resolution(cam,2)
+    cam.set_Contrast(cam,50.0)
 
-Streaming_Video.set_parameters('192.168.1.108', 'admin', 'ADMIN2020')
-streaming = Streaming_Video.get_Streaming_Video()
+    cam.set_Resolution(cam,2)
 
-streaming.live_streaming(streaming)
+    #print(cv2.getBuildInformation())
 
-print("ciao")
+    Streaming_Video.set_parameters('192.168.1.108', 'admin', 'ADMIN2020')
+    streaming = Streaming_Video.get_Streaming_Video()
+
+    #streaming.live_streaming(streaming)
+
+    streaming.live_streaming(streaming)
+    #streaming.set_FrameRate(streaming,1)
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()

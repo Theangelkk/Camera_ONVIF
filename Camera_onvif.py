@@ -43,7 +43,7 @@ class Camera:
 
                 Camera.reset_parameters()
 
-                print("Invalid Username e Password!")
+                print("ONVIF Invalid Username e Password!")
 
         else:
            raise("You cannot create another Camera class")
