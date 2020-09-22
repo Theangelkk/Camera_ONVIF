@@ -2,6 +2,8 @@ from onvif import ONVIFCamera, exceptions
 
 class Camera:
 
+    instance = None
+
     __mycam__ = None
     IP = None
     Port = None
@@ -69,8 +71,8 @@ class Camera:
     @staticmethod
     def get_camera():
         if Camera.__mycam__ is None and Camera.Setting_Par:
-            Camera()
-        return Camera
+            Camera.instance = Camera()
+        return Camera.instance
 
     def get_config_media(self):
         Camera.__config_media__ = Camera.__media__.GetVideoEncoderConfiguration(Camera.__token__)
