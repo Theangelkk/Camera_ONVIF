@@ -24,13 +24,14 @@ class Streaming_Video:
     __frame_rate__ = 1
     __BufferFrame__ = []
     __n_item_buffer__ = 0
+    __Can_Save__ = True
 
     def __init__(self):
         if self.__mycam__ is None:
             try:
-                #pipe_GStreamer = "rtspsrc location=rtsp://" + Streaming_Video.Username + ":" + Streaming_Video.Password + "@" + Streaming_Video.IP + "/ latency=200 ! queue ! rtph264depay ! appsink"
-                self.__mycam__ = cv2.VideoCapture("rtsp://" + Streaming_Video.Username + ":" + Streaming_Video.Password + "@" + Streaming_Video.IP + "/")
-                #Streaming_Video.__mycam__ = cv2.VideoCapture(pipe_GStreamer,cv2.CAP_GSTREAMER)
+                uri_rtsp = "" + Streaming_Video.Username + ":" + Streaming_Video.Password + "@" + Streaming_Video.IP + ":554/"
+                self.__mycam__ = cv2.VideoCapture("rtsp://" + uri_rtsp, cv2.CAP_FFMPEG)
+                print(self.__mycam__.isOpened())
 
                 self.set_FrameRate(10)
                 self.__thread_save_frame__ = Thread_Saving_Frame(obj_MainStreaming=self)
@@ -90,15 +91,16 @@ class Streaming_Video:
             cv2.imshow("View Buffer Frame", frame)
             cv2.waitKey()
 
+    def state_save_video(self):
+        return self.__Can_Save__
+
     def save_Video(self):
 
-        Can_Save = True
-
         if self.__thread_save_video__ is not None:
-            if self.__thread_save_video__.isAlive():
-                Can_Save = False
+            if self.__thread_save_video__.isAlive == False:
+                self.__Can_Save__ = False
 
-        if Can_Save:
+        if self.__Can_Save__:
             Esito = True
             name_video = ""
 
@@ -112,12 +114,17 @@ class Streaming_Video:
                 else:
                     Esito = False
 
-            if self.__thread_save_video__ is None:
-                self.__thread_save_video__ = Thread_Video_Save(obj_MainStreaming=self, name_video=name_video)
-
+            self.__thread_save_video__ = Thread_Video_Save(obj_MainStreaming=self, name_video=name_video)
             self.__thread_save_video__.start()
+
+            self.__Can_Save__ = False
         else:
             print("Thread Save Video is running...")
+
+    def stop_save(self):
+        self.__thread_save_video__.stop()
+        self.__thread_save_video__ = None
+        self.__Can_Save__ = True
 
 class Thread_Live_Streaming(threading.Thread):
 
@@ -185,11 +192,12 @@ class Thread_Video_Save(threading.Thread):
         self.obj_MainStreaming = obj_MainStreaming
         self.name_video = name_video
         self.mutex = threading.Lock()
+        self.finish = True
 
         return
 
-    def isData(self):
-        return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
+    def setFileName(self, filename):
+        self.name_video = filename
 
     def run(self):
         print("Thread Save Video is started...")
@@ -198,25 +206,30 @@ class Thread_Video_Save(threading.Thread):
         height = None
         width = None
 
-        video_writer = None
+        self.video_writer = None
+        self.finish = True
+        try:
+            print(self.obj_MainStreaming.__mycam__.isOpened())
+            if self.obj_MainStreaming.__mycam__.isOpened():
+                ret, frame = self.obj_MainStreaming.__mycam__.read()
+                height = frame.shape[0]
+                width = frame.shape[1]
 
-        if self.obj_MainStreaming.__mycam__.isOpened():
-            ret, frame = self.obj_MainStreaming.__mycam__.read()
-            height = frame.shape[0]
-            width = frame.shape[1]
+                fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                self.video_writer = cv2.VideoWriter(self.name_video, fourcc, self.obj_MainStreaming.__frame_rate__, (width, height))
 
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            video_writer = cv2.VideoWriter(self.name_video, fourcc, self.obj_MainStreaming.__frame_rate__, (width, height))
 
-        while self.obj_MainStreaming.__mycam__.isOpened():
-            ret, frame = self.obj_MainStreaming.__mycam__.read()
+            while self.obj_MainStreaming.__mycam__.isOpened() and self.finish:
+                ret, frame = self.obj_MainStreaming.__mycam__.read()
 
-            # write the flipped frame
-            video_writer.write(frame)
+                # write the flipped frame
+                self.video_writer.write(frame)
+        except:
+            pass
 
-            if self.isData():
-                key = sys.stdin.read(1)
-                if key == 'S' or key == 's':
-                    video_writer.release()
-                    print("Thread_Video_Save is terminated")
-                    return 0
+    def stop(self):
+        self.video_writer.release()
+        self.obj_MainStreaming.__Can_Save__ = True
+        self.finish = False
+        print("Thread_Video_Save is terminated")
+        return 0
