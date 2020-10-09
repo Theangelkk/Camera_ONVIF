@@ -6,6 +6,11 @@ import os
 import select
 import sys
 
+import base64
+import zmq
+#import json
+import simplejson as json
+
 class Streaming_Video:
 
     instance = None
@@ -25,6 +30,8 @@ class Streaming_Video:
     __BufferFrame__ = []
     __n_item_buffer__ = 0
 
+    __frame_no_send__ = 0
+
     def __init__(self):
         if self.__mycam__ is None:
             try:
@@ -32,7 +39,7 @@ class Streaming_Video:
                 self.__mycam__ = cv2.VideoCapture("rtsp://" + Streaming_Video.Username + ":" + Streaming_Video.Password + "@" + Streaming_Video.IP + "/")
                 #Streaming_Video.__mycam__ = cv2.VideoCapture(pipe_GStreamer,cv2.CAP_GSTREAMER)
 
-                self.set_FrameRate(10)
+                self.set_FrameRate(6)
                 self.__thread_save_frame__ = Thread_Saving_Frame(obj_MainStreaming=self)
                 self.__thread_save_frame__.start()
             except:
@@ -150,6 +157,10 @@ class Thread_Saving_Frame(threading.Thread):
         self.obj_MainStreaming = obj_MainStreaming
         self.mutex = threading.Lock()
 
+        self.context = zmq.Context()
+        self.footage_socket = self.context.socket(zmq.PUB)
+        self.footage_socket.bind('tcp://*:10000')
+
         return
 
     def run(self):
@@ -168,15 +179,45 @@ class Thread_Saving_Frame(threading.Thread):
                 named_tuple = time.localtime()  # get struct_time
                 time_string = time.strftime("%H:%M:%S", named_tuple)
 
-                item = {'Image': frame, 'Time': time_string, 'ID': self.obj_MainStreaming.__n_item_buffer__}
+                frame = cv2.resize(frame, (1200, 800))  # resize the frame
+                encoded, buffer = cv2.imencode('.jpg', frame)
+                frame_64 = base64.b64encode(buffer)
+
+                item = {'Image': frame_64, 'Time': time_string, 'ID': self.obj_MainStreaming.__n_item_buffer__}
 
                 with self.mutex:
-                    self.obj_MainStreaming.__BufferFrame__.append(item)
+                    #self.obj_MainStreaming.__BufferFrame__.append(item)
                     self.obj_MainStreaming.__n_item_buffer__ += 1
 
+                # Invio Frame Thread
+                #self.__thread__ = Thread_Sever_Frame(obj_MainStreaming=self.obj_MainStreaming,obj_ThreadSave=self, item=item).start()
+
+                #msg = self.footage_socket.recv_string()
+                self.footage_socket.send_string(json.dumps(item), zmq.NOBLOCK)
+
+            '''
             if self.obj_MainStreaming.__n_item_buffer__ > 5:
                 #print("Saving Streaming Thread is terminated")
                 return 0
+            '''
+
+class Thread_Sever_Frame(threading.Thread):
+
+    def __init__(self, group=None, target=None, obj_MainStreaming=None,obj_ThreadSave=None, item=None):
+        super(Thread_Sever_Frame,self).__init__(group=group, target=target)
+        self.obj_MainStreaming = obj_MainStreaming
+        self.obj_ThreadSave = obj_ThreadSave
+        self.item = item
+
+    def run(self):
+            try:
+                msg = self.obj_ThreadSave.footage_socket.recv_string()
+                self.obj_ThreadSave.footage_socket.send_string(json.dumps(self.item),zmq.NOBLOCK)
+                #self.footage_socket.send(self.item,zmq.NOBLOCK)
+            except zmq.error:
+                print("Frame Non Inviato")
+                self.obj_MainStreaming.__frame_no_send__ += 1
+
 
 class Thread_Video_Save(threading.Thread):
 
