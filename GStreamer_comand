@@ -1,0 +1,3 @@
+comando giusto GStreamer:
+gst-launch-1.0 -v rtspsrc location="rtsp://admin:ADMIN2020@192.168.1.108:554" latency=10 ! rtph264depay ! h264parse !  decodebin ! autovideosink
+
