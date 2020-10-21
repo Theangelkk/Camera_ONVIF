@@ -40,7 +40,7 @@ class Streaming_Video:
                 self.__mycam__ = cv2.VideoCapture("rtsp://" + uri_rtsp, cv2.CAP_FFMPEG)
                 print(self.__mycam__.isOpened())
 
-                self.set_FrameRate(6)
+                self.set_FrameRate(20)
                 self.__thread_save_frame__ = Thread_Saving_Frame(obj_MainStreaming=self)
                 self.__thread_save_frame__.start()
             except:

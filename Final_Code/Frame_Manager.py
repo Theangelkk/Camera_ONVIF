@@ -1,6 +1,7 @@
 import cv2
 import zmq
 import threading
+import time
 from .Thread_Frame import Thread_Frame
 
 class Frame_Manager(threading.Thread):
@@ -36,17 +37,21 @@ class Frame_Manager(threading.Thread):
                 self.__IP__ = ip
                 self.__Username__ = username
                 self.__Password__ = password
-                self.__mycam__ = cv2.VideoCapture("rtsp://" + self.__Username__ + ":" + self.__Password__ + "@" + self.__IP__ + "/")
 
-                self.set_FrameRate(20)
+                self.Connessione_Camera()
+
+                #self.__mycam__ = cv2.VideoCapture("/Users/cvprlabalfredopetrosino/Downloads/Video_Camera/quinto.mp4")
+                self.set_FrameRate(6)
 
                 # Creazione socket con Car Detection
                 self.create_socket_connection()
-
             except:
                 print("Streaming Invalid Username e Password!")
         else:
             raise ("You cannot create another Streaming_Video class")
+
+    def Connessione_Camera(self):
+        self.__mycam__ = cv2.VideoCapture("rtsp://" + self.__Username__ + ":" + self.__Password__ + "@" + self.__IP__ + "/")
 
     def create_socket_connection(self):
 
