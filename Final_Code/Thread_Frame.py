@@ -54,8 +54,7 @@ class Thread_Frame(threading.Thread):
                             # Salvataggio Frame Buffer
                             if self.obj_FrameManager.__Save_Frame__:
                                 self.obj_FrameManager.__BufferFrame__.append(item)
-
-                            self.obj_FrameManager.__n_item_buffer__ += 1
+                                self.obj_FrameManager.__n_item_buffer__ += 1
 
                         #else:  # per avere il video in loop
                             #self.obj_FrameManager.__mycam__.set(cv2.CAP_PROP_POS_FRAMES, 0)

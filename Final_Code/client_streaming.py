@@ -15,13 +15,9 @@ req.setsockopt_string(zmq.SUBSCRIBE, '')
 
 while True:
     try:
-        #item = req.recv_string()
         msg = req.recv()
 
         json_item = json.loads(msg, encoding='utf-8')
-
-        #print("Time = " + str(json_item['Time']))
-        #print("ID = " + str(json_item['ID']))
 
         img = base64.b64decode(json_item['Image'])
 

@@ -20,18 +20,17 @@ def show_main_menu():
     global socket
 
     Esito = False
-    Richiesta = {'FrameRate': None, 'Height': None, 'Width': None}
+    Richiesta = {'accuracy': None, 'avg_fps': None}
 
     while True:
-        clear()
+        #clear()
 
         ## ------------------- Show Main menu ---------------------- ##
         print(30 * '-')
         print("   M A I N - M E N U")
         print(30 * '-')
-        print("1. Set FrameRate")
-        print("2. Set Height")
-        print("3. Set Width")
+        print("1. Set accuracy")
+        print("2. Set avg_fps")
 
         if Esito:
             print("S. Invia Richiesta")
@@ -48,29 +47,23 @@ def show_main_menu():
 
         ### Take action as per selected menu-option ###
         if choice == '1':
-            clear()
-            frame_rate = int(input("Value Frame Rate: "))
+            #clear()
+            frame_rate = float(input("Value accuracy: "))
 
-            Richiesta['FrameRate'] = frame_rate
+            Richiesta['accuracy'] = frame_rate
 
             Esito = True
         elif choice == '2':
-            clear()
-            height = int(input("Value Height: "))
+            #clear()
+            avg_fps = float(input("Value avg_fps: "))
 
-            Richiesta['Height'] = height
-            Esito = True
-        elif choice == '3':
-            clear()
-            width = int(input("Value Width: "))
-
-            Richiesta['Width'] = width
+            Richiesta['avg_fps'] = avg_fps
             Esito = True
         elif choice == 's' or choice == 'S':
 
             socket.send_string(json.dumps(Richiesta))
             Esito = False
-            Richiesta = {'FrameRate': None, 'Height': None, 'Width': None}
+            Richiesta = {'accuracy': None, 'avg_fps': None}
 
             msg = socket.recv()
 
@@ -80,7 +73,7 @@ def show_main_menu():
 
             input('Premi un Tasto per andare avanti...')
         else:
-            clear()
+            #clear()
             print("Invalid number. Try again...")
 
 if __name__ == '__main__':

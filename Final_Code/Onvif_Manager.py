@@ -60,6 +60,8 @@ class Onvif_Manager:
 
                 self.update_system_Date_Time()
 
+                Onvif_Manager.instance = self
+
             except(exceptions.ONVIFError):
                 self.__mycam__ = None
                 self.__media__ = None
@@ -82,6 +84,7 @@ class Onvif_Manager:
 
     @staticmethod
     def reset_parameters():
+        Onvif_Manager.instance = None
         Onvif_Manager.IP = None
         Onvif_Manager.Port = None
         Onvif_Manager.Username = None
@@ -90,8 +93,8 @@ class Onvif_Manager:
 
     @staticmethod
     def get_camera():
-        if Onvif_Manager.Setting_Par:
-            Onvif_Manager.instance = Onvif_Manager()
+        if Onvif_Manager.Setting_Par and Onvif_Manager.instance is None:
+            Onvif_Manager()
         return Onvif_Manager.instance
 
     def get_config_media(self):
@@ -162,54 +165,100 @@ class Onvif_Manager:
 
     def set_Brightness(self,Value_Brightness):
 
-        if(Value_Brightness >= 0.0 and Value_Brightness <= 100.0):
-            request_img = self.create_request_image()
+        try:
+            if(Value_Brightness >= 0.0 and Value_Brightness <= 100.0):
+                request_img = self.create_request_image()
 
-            self.__config_image__.Brightness = Value_Brightness
-            request_img.ImagingSettings = self.__config_image__
+                self.__config_image__.Brightness = Value_Brightness
+                request_img.ImagingSettings = self.__config_image__
 
-            self.__image__.SetImagingSettings(request_img)
+                self.__image__.SetImagingSettings(request_img)
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")
 
     def set_Saturation(self,Value_Saturation):
 
-        if(Value_Saturation >= 0.0 and Value_Saturation <= 100.0):
-            request_img = self.create_request_image()
+        try:
+            if(Value_Saturation >= 0.0 and Value_Saturation <= 100.0):
+                request_img = self.create_request_image()
 
-            self.__config_image__.ColorSaturation = Value_Saturation
-            request_img.ImagingSettings = self.__config_image__
+                self.__config_image__.ColorSaturation = Value_Saturation
+                request_img.ImagingSettings = self.__config_image__
 
-            self.__image__.SetImagingSettings(request_img)
+                self.__image__.SetImagingSettings(request_img)
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")
 
     def set_Sharpness(self,Value_Sharpness):
 
-        if(Value_Sharpness >= 0.0 and Value_Sharpness <= 100.0):
-            request_img = self.create_request_image()
+        try:
+            if(Value_Sharpness >= 0.0 and Value_Sharpness <= 100.0):
+                request_img = self.create_request_image()
 
-            self.__config_image__.Sharpness = Value_Sharpness
-            request_img.ImagingSettings = self.__config_image__
+                self.__config_image__.Sharpness = Value_Sharpness
+                request_img.ImagingSettings = self.__config_image__
 
-            self.__image__.SetImagingSettings(request_img)
+                self.__image__.SetImagingSettings(request_img)
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")
 
     def set_Contrast(self,Value_Contrast):
 
-        if(Value_Contrast >= 0.0 and Value_Contrast <= 100.0):
-            request_img = self.create_request_image()
+        try:
+            if(Value_Contrast >= 0.0 and Value_Contrast <= 100.0):
+                request_img = self.create_request_image()
 
-            self.__config_image__.Contrast = Value_Contrast
-            request_img.ImagingSettings = self.__config_image__
+                self.__config_image__.Contrast = Value_Contrast
+                request_img.ImagingSettings = self.__config_image__
 
-            self.__image__.SetImagingSettings(request_img)
+                self.__image__.SetImagingSettings(request_img)
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")
 
     def set_Focus_Move(self, Value_Position):
 
-        if (Value_Position >= 0.0 and Value_Position <= 1.0):
-            request_focus = self.create_request_focus()
+        try:
+            if (Value_Position >= 0.0 and Value_Position <= 1.0):
+                request_focus = self.create_request_focus()
 
-            request_focus.Focus = {'Absolute': {'Position': Value_Position, 'Speed': None}, \
-                                   'Relative': {'Distance': Value_Position, 'Speed': None}, \
-                                   'Continuous': {'Speed': 0.0}}
+                request_focus.Focus = {'Absolute': {'Position': Value_Position, 'Speed': None}, \
+                                       'Relative': {'Distance': Value_Position, 'Speed': None}, \
+                                       'Continuous': {'Speed': 0.0}}
 
-            self.__image__.Move(request_focus)
+                self.__image__.Move(request_focus)
+
+                return True
+
+            return False
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")
+
+            return False
 
     # ------------------ Setting Media -------------------------
     # Creazione della richiesta da inviare alla camera relativa alla modifica dei parametri dell'encoder
@@ -224,10 +273,18 @@ class Onvif_Manager:
 
     def set_Resolution(self, Index_Resolution):
 
-        if(Index_Resolution >= 0 and Index_Resolution < len(self.get_ResolutionAvailable())):
-            request_media = self.create_request_media()
-            self.__config_media__.Resolution = self.__option_camera__.H264.ResolutionsAvailable[Index_Resolution]
+        try:
+            if(Index_Resolution >= 0 and Index_Resolution < len(self.get_ResolutionAvailable())):
+                request_media = self.create_request_media()
+                self.__config_media__.Resolution = self.__option_camera__.H264.ResolutionsAvailable[Index_Resolution]
 
-            request_media.Configuration = self.__config_media__
+                request_media.Configuration = self.__config_media__
 
-            self.__media__.SetVideoEncoderConfiguration(request_media)
+                self.__media__.SetVideoEncoderConfiguration(request_media)
+        except(exceptions.ONVIFError):
+            self.__mycam__ = None
+            self.__media__ = None
+
+            Onvif_Manager.reset_parameters()
+
+            print("Onvif Errore Connessione")

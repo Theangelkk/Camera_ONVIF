@@ -2,6 +2,7 @@ import zmq
 import threading
 import simplejson as json
 from .Frame_Manager import Frame_Manager
+from .Onvif_Manager import Onvif_Manager
 
 class Feedback_Manager(threading.Thread):
 
@@ -22,30 +23,52 @@ class Feedback_Manager(threading.Thread):
             self.__IP__ = ip
             self.__Port__ = port
             self.__thread_streaming__ = thread_streaming
+            self.Threshould_acc = 0.6
 
-            # Creazione Socket Publisher
+            self.Connessione_Onvif()
+            self.onvif = Onvif_Manager.get_camera()
+
+            # Creazione Socket Request/Reply
             self.__context__ = zmq.Context()
             self.__socket__ = self.__context__.socket(zmq.REP)
             self.__socket__.bind('tcp://' + str(self.__IP__) + ':' + str(self.__Port__))
 
     def run(self):
 
+        FirstTime = True
+
         while True:
             msg = self.__socket__.recv()
 
-            json_request = json.loads(msg, encoding='utf-8')
+            Risposta = {'accuracy': None, 'avg_fps': None}
+            self.onvif = Onvif_Manager.get_camera()
 
-            print(json_request)
+            if self.onvif is not None:
+                json_request = json.loads(msg, encoding='utf-8')
 
-            Risposta = {'FrameRate':None,'Height':None,'Width':None}
+                print(json_request)
 
-            if json_request['FrameRate'] is not None:
-                Risposta['FrameRate'] = self.__thread_streaming__.set_FrameRate(int(json_request['FrameRate']))
+                Risposta = {'accuracy':None,'avg_fps':None}
 
-            if json_request['Height'] is not None:
-                Risposta['Height'] = self.__thread_streaming__.set_Height(int(json_request['Height']))
+                # Frame Rate
+                if json_request['avg_fps'] is not None:
+                    Risposta['avg_fps'] = self.__thread_streaming__.set_FrameRate(int(json_request['avg_fps']))
 
-            if json_request['Width'] is not None:
-                Risposta['Width'] = self.__thread_streaming__.set_Width(int(json_request['Width']))
+                if json_request['accuracy'] is not None:
+                    if float(json_request['accuracy'] < self.Threshould_acc):
+                        Risposta['accuracy'] = self.onvif.set_Focus_Move(0.1)
+                    else:
+                        Risposta['accuracy'] = False
 
-            self.__socket__.send_string(json.dumps(Risposta))
+                self.__socket__.send_string(json.dumps(Risposta))
+                FirstTime = True
+            else:
+                print("Attendo Connessione Camera ONVIF")
+                self.Connessione_Onvif()
+
+                if FirstTime:
+                    self.__socket__.send_string(json.dumps(Risposta))
+                    FirstTime = False
+
+    def Connessione_Onvif(self):
+        Onvif_Manager.set_parameters('192.168.1.108', 80, 'project', 'ONVIFADMIN2020')

@@ -31,6 +31,7 @@ class Frame_Manager(threading.Thread):
 
     def __init__(self, group=None, target=None, ip=None, username=None, password=None):
         super(Frame_Manager, self).__init__(group=group, target=target)
+
         # Se la connessione con la camera non è stata ancora avviata...
         if self.__mycam__ is None and ip is not None and username is not None and password is not None:
             try:
