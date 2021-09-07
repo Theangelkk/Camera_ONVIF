@@ -1,5 +1,6 @@
 astroid==2.3.3
 attrs==21.2.0
+scikit-build==0.12.0
 cached-property==1.5.2
 certifi==2021.5.30
 charset-normalizer==2.0.4
@@ -22,7 +23,6 @@ requests-file==1.5.1
 requests-toolbelt==0.9.1
 simplejson==3.17.5
 six==1.14.0
-scikit-build==0.12.0
 urllib3==1.26.6
 wincertstore==0.2
 wrapt==1.11.2
