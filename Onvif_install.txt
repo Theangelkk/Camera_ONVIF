@@ -1,0 +1,13 @@
+1.	Conda create -n SE4I python=3.6
+2.	pip install opencv-python
+3.	pip install zmq
+4.	pip install simplejson
+
+# Da notare che: pip install onvif --> è solo per Python2 e se lo si prova
+# ad installare vengono generate eccezioni per la libreria suds 0.4
+
+# Installare questa repository per Python3
+5.	https://github.com/FalkTannhaeuser/python-onvif-zeep
+
+oppure con il comando:
+5.	pip install --upgrade onvif_zeep
